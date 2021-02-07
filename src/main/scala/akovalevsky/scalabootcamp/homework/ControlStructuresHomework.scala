@@ -21,9 +21,9 @@ object ControlStructuresHomework {
       }
     }
 
-    final case class Sum private(numbers: List[Double]) extends Command
+    final case class Sum(numbers: List[Double]) extends Command
 
-    final case class Average(numbers: List[Double]) extends Command
+    final case class Average private(numbers: List[Double]) extends Command
 
     object Average {
       def apply(numbers: List[Double]): Either[ErrorMessage, Average] = {
@@ -34,7 +34,7 @@ object ControlStructuresHomework {
       }
     }
 
-    final case class Min(numbers: List[Double]) extends Command
+    final case class Min private(numbers: List[Double]) extends Command
 
     object Min {
       def apply(numbers: List[Double]): Either[ErrorMessage, Min] = {
@@ -45,7 +45,7 @@ object ControlStructuresHomework {
       }
     }
 
-    final case class Max(numbers: List[Double]) extends Command
+    final case class Max private(numbers: List[Double]) extends Command
 
     object Max {
       def apply(numbers: List[Double]): Either[ErrorMessage, Max] = {
