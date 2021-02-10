@@ -114,4 +114,32 @@ object Collections {
 
     go(str.toCharArray.toList, Nil)
   }
+
+
+  // Exercise. Calculate the total cost of all vegetables, taking vegetable amounts (in units) from
+  // `vegetableAmounts` and prices per unit from `vegetablePrices`. Assume the price is 10 if not available
+  // in `vegetablePrices`.
+
+  val vegetableAmounts = Map(
+    "tomatoes" -> 17,
+    "peppers" -> 234,
+    "olives" -> 32,
+    "cucumbers" -> 323,
+  )
+
+  val vegetablePrices = Map(
+    "tomatoes" -> 4,
+    "peppers" -> 5,
+    "olives" -> 17,
+  )
+
+  val totalVegetableCost: Int =
+    vegetableAmounts.map { case (vegetable, amount) => vegetablePrices.getOrElse(vegetable, 10) * amount }.sum
+
+  // Exercise. Given the vegetable weights (per 1 unit of vegetable) in `vegetableWeights` and vegetable
+  // amounts (in units) in `vegetableAmounts`, calculate the total weight per type of vegetable, if known.
+  //
+  // For example, the total weight of "olives" is 2 * 32 == 64.
+  val totalVegetableWeights: Map[String, Int] = vegetableAmountt
+
 }
