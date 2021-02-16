@@ -5,7 +5,7 @@ object DataStructures {
     if (list.isEmpty)
       false
     else
-      list.tail.forall(_.equals(list.head))
+      list.tail.forall(_ == list.head)
   }
 
   // Exercise. Calculate the total cost of all vegetables, taking vegetable amounts (in units) from
