@@ -72,11 +72,9 @@ object Collections {
     case _ :: y => findGapRecursive(y)
   }
 
-  def min(list: List[Int]): Option[Int] = {
-    list match {
-      case Nil => None
-      case _ => Some(list.foldLeft(Int.MaxValue) { (minVal, x) => minVal min x })
-    }
+  def min(list: List[Int]): Option[Int] = list match {
+    case Nil => None
+    case _ => Some(list.foldLeft(Int.MaxValue) { (minVal, x) => minVal min x })
   }
 
   def minRecursive(list: List[Int]): Option[Int] = {
@@ -105,14 +103,15 @@ object Collections {
       }
       else {
         val countsNew = (str, counts) match {
-          case (char :: _, (c, charCount) :: charCounts) if char == c => (char, charCount + 1) :: charCounts
-          case (char :: _, _) => (char, 1) :: counts
+          case (curChar :: _, (c, charCount) :: charCounts) if curChar == c => (curChar, charCount + 1) :: charCounts
+          case (curChar :: _, _) => (curChar, 1) :: counts
         }
+
         go(str.tail, countsNew)
       }
     }
 
-    go(str.toCharArray.toList, Nil)
+    go(str.toCharArray.toList, Nil).reverse
   }
 
 
