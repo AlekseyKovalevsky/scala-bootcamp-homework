@@ -13,12 +13,10 @@ object ControlStructuresHomework {
     final case class Divide private(dividend: Double, divisor: Double) extends Command
 
     object Divide {
-      def apply(dividend: Double, divisor: Double): Either[ErrorMessage, Divide] = {
-        if (divisor == 0)
-          Left(ErrorMessage("The divisor can't be zero"))
-        else
-          Right(new Divide(dividend, divisor))
-      }
+      def apply(dividend: Double, divisor: Double): Either[ErrorMessage, Divide] = Either.cond(
+        divisor != 0,
+        new Divide(dividend, divisor),
+        ErrorMessage("The divisor can't be zero"))
     }
 
     final case class Sum(numbers: List[Double]) extends Command
@@ -26,34 +24,28 @@ object ControlStructuresHomework {
     final case class Average private(numbers: List[Double]) extends Command
 
     object Average {
-      def apply(numbers: List[Double]): Either[ErrorMessage, Average] = {
-        if (numbers.isEmpty)
-          Left(ErrorMessage("The average command requires at least 1 argument"))
-        else
-          Right(new Average(numbers))
-      }
+      def apply(numbers: List[Double]): Either[ErrorMessage, Average] = Either.cond(
+        numbers.nonEmpty,
+        new Average(numbers),
+        ErrorMessage("The average command requires at least 1 argument"))
     }
 
     final case class Min private(numbers: List[Double]) extends Command
 
     object Min {
-      def apply(numbers: List[Double]): Either[ErrorMessage, Min] = {
-        if (numbers.isEmpty)
-          Left(ErrorMessage("The min command requires at least 1 argument"))
-        else
-          Right(new Min(numbers))
-      }
+      def apply(numbers: List[Double]): Either[ErrorMessage, Min] = Either.cond(
+        numbers.nonEmpty,
+        new Min(numbers),
+        ErrorMessage("The min command requires at least 1 argument"))
     }
 
     final case class Max private(numbers: List[Double]) extends Command
 
     object Max {
-      def apply(numbers: List[Double]): Either[ErrorMessage, Max] = {
-        if (numbers.isEmpty)
-          Left(ErrorMessage("The max command requires at least 1 argument"))
-        else
-          Right(new Max(numbers))
-      }
+      def apply(numbers: List[Double]): Either[ErrorMessage, Max] = Either.cond(
+        numbers.nonEmpty,
+        new Max(numbers),
+        ErrorMessage("The max command requires at least 1 argument"))
     }
 
   }
@@ -65,18 +57,18 @@ object ControlStructuresHomework {
   def parseCommand(x: String): Either[ErrorMessage, Command] = {
     def parseArgs(args: List[String]): Either[ErrorMessage, List[Double]] = {
       val argsParsed = args.map(_.toDoubleOption)
-      if (argsParsed.forall(!_.isEmpty))
-        Right(argsParsed.map(_.get))
-      else
-        Left(ErrorMessage("Failed to parse arguments"))
+      Either.cond(
+        argsParsed.forall(_.isDefined),
+        argsParsed.map(_.get),
+        ErrorMessage("Failed to parse arguments"))
     }
 
     x.trim.toLowerCase.split("\\s+").toList match {
-      case "divide" :: args if args.length != 2 => Left(ErrorMessage("The divide command requires exactly 2 arguments"))
-      case "divide" :: args => for {
-        parsedArgs <- parseArgs(args)
+      case "divide" :: x :: y :: Nil => for {
+        parsedArgs <- parseArgs(List(x, y))
         command <- Divide(parsedArgs(0), parsedArgs(1))
       } yield command
+      case "divide" :: _ => Left(ErrorMessage("The divide command requires exactly 2 arguments"))
       case "sum" :: args => for {
         parsedArgs <- parseArgs(args)
       } yield Sum(parsedArgs)
