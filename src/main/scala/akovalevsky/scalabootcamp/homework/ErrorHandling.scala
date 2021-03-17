@@ -144,14 +144,13 @@ object ErrorHandling {
         )
       }
 
-      def validateExpDateHasNotPassed(x: LocalDate): AllErrorsOr[LocalDate] = {
-        val thisMonth = LocalDate.now().withDayOfMonth(1)
-
+      def validateExpDateHasNotPassed(x: LocalDate, thisMonth: => LocalDate): AllErrorsOr[LocalDate] = {
         if (x.isAfter(thisMonth)) x.validNec
         else ExpDateHasPassed.invalidNec
       }
 
-      def validateExpDate(x: String): AllErrorsOr[LocalDate] = validateExpDateIsDate(x).andThen(validateExpDateHasNotPassed)
+      def validateExpDate(x: String): AllErrorsOr[LocalDate] = validateExpDateIsDate(x)
+        .andThen(expDate => validateExpDateHasNotPassed(expDate, LocalDate.now().withDayOfMonth(1)))
 
       def validateSecurityCodeIsNumeric: String => AllErrorsOr[Seq[Int]] = validateIsNumericWithErr(SecurityCodeIsNotNumeric)
 
