@@ -1,4 +1,5 @@
 package akovalevsky.scalabootcamp.homework.tests
+
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
 import cats.instances.either._
@@ -33,9 +34,9 @@ import scala.util.Try
  *
  * It would be nice to avoid using Encoder/Decoder.forProductN where you specify all field names
  */
-class HomeworkSpec extends AnyWordSpec with Matchers with EitherValues {
+class JsonHomeworkSpec extends AnyWordSpec with Matchers with EitherValues {
 
-  import HomeworkSpec._
+  import JsonHomeworkSpec._
 
   "NBA JSON API client" should {
     "get info about today games" in {
@@ -61,7 +62,7 @@ class HomeworkSpec extends AnyWordSpec with Matchers with EitherValues {
 
 }
 
-object HomeworkSpec {
+object JsonHomeworkSpec {
 
   object CustomDecoders {
     val localDateParseErrorString = "Failed to parse local date: Format expected: yyyymmdd."
@@ -83,14 +84,12 @@ object HomeworkSpec {
 
   import CustomDecoders._
 
-  implicit val config: Configuration = Configuration.default.copy(
-    transformMemberNames = {
-      case "full_timeout_remaining" => "fullTimeoutRemaining"
-      case other => other
-    }
-  )
+  implicit val config = Configuration.default
 
-  @ConfiguredJsonCodec final case class TeamTotals(assists: String, fullTimeoutRemaining: String, plusMinus: String)
+  @ConfiguredJsonCodec final case class TeamTotals(
+                                                    assists: String,
+                                                    @JsonKey("full_timeout_remaining") fullTimeoutRemaining: String,
+                                                    plusMinus: String)
 
   @JsonCodec final case class TeamBoxScore(totals: TeamTotals)
 
