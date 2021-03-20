@@ -64,7 +64,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.enter(4)
     } yield c
 
-    assert(resultCalculator == Right(Calculator(0, screen = 1234, None)), "The method calculates the screen value wrong")
+    inside(resultCalculator) {
+      case Right(c) => assert(c.screen == 1234, "The enter method calculates the screen value wrong")
+    }
   }
 
   test("Pressing any operation should perform the current operation and copy the result to the screen") {
@@ -133,7 +135,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(resultCalculator == Right(Calculator(memory = 0, screen = 46)))
+    inside(resultCalculator) {
+      case Right(c) => assert(c.screen == 46)
+    }
   }
 
   test("Product calculation is right") {
@@ -148,7 +152,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(resultCalculator == Right(Calculator(memory = 0, screen = 408)))
+    inside(resultCalculator) {
+      case Right(c) => assert(c.screen == 408)
+    }
   }
 
   test("Difference calculation is right") {
@@ -163,7 +169,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(resultCalculator == Right(Calculator(memory = 0, screen = -22)))
+    inside(resultCalculator) {
+      case Right(c) => assert(c.screen == -22)
+    }
   }
 
   test("Division produces the integer part of the division of the result") {
@@ -177,7 +185,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(resultCalculator == Right(Calculator(memory = 0, screen = 7)))
+    inside(resultCalculator) {
+      case Right(c) => assert(c.screen == 7)
+    }
   }
 
   test("Several operations in a row are right") {
@@ -195,11 +205,12 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(firstResultCalculator == Right(Calculator(memory = 0, screen = 2)))
+    inside(firstResultCalculator) {
+      case Right(c) => assert(c.screen == 2)
+    }
 
     val secondResultCalculator = for {
       c <- firstResultCalculator
-      c <- Right(c.reset)
       c <- c.enter(1)
       c <- c.plus
       c <- c.enter(1)
@@ -210,7 +221,9 @@ class TestingHomeworkCalculatorSpec extends AnyFunSuite {
       c <- c.calculate
     } yield c
 
-    assert(secondResultCalculator == Right(Calculator(memory = 0, screen = 0)))
+    inside(secondResultCalculator) {
+      case Right(c) => assert(c.screen == 0)
+    }
   }
 
 }

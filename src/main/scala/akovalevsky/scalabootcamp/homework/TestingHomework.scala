@@ -38,7 +38,7 @@ object TestingHomework {
                          memory: Int = 0,
                          screen: Int = 0,
                          operation: Option[Operation] = None,
-                         pendingSecondArg: Boolean = false) {
+                         pendingNextArg: Boolean = false) {
     private def calculateLastOperation: Either[CalculatorError, Int] = operation match {
       case None => Right(screen)
       case Some(Operation.Plus) => Right(memory + screen)
@@ -49,17 +49,17 @@ object TestingHomework {
     }
 
     private def enterOperation(op: Operation): Either[CalculatorError, Calculator] = {
-      if (pendingSecondArg)
+      if (pendingNextArg)
         Right(this.copy(operation = Some(op)))
       else
         for {
           lastOpCalcResult <- calculateLastOperation
-        } yield this.copy(memory = 0, screen = lastOpCalcResult, operation = Some(op), pendingSecondArg = true)
+        } yield this.copy(memory = 0, screen = lastOpCalcResult, operation = Some(op), pendingNextArg = true)
     }
 
     def enter(digit: Int): Either[CalculatorError, Calculator] = {
       if (digit >= 0 && digit <= 9) {
-        if (pendingSecondArg) Right(this.copy(memory = screen, screen = digit, pendingSecondArg = false))
+        if (pendingNextArg) Right(this.copy(memory = screen, screen = digit, pendingNextArg = false))
         else Right(this.copy(screen = screen * 10 + digit))
       }
       else Left(CalculatorError.InvalidDigit)
@@ -75,10 +75,7 @@ object TestingHomework {
 
     def calculate: Either[CalculatorError, Calculator] = for {
       lastOpCalcResult <- calculateLastOperation
-    } yield this.copy(memory = 0, screen = lastOpCalcResult, None)
-
-    def reset: Calculator = Calculator()
-
+    } yield this.copy(memory = 0, screen = lastOpCalcResult, None, pendingNextArg = true)
   }
 
 }
