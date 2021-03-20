@@ -8,7 +8,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import scala.math.BigInt.int2bigInt
 
-class BasicsSpecs extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks {
+class BasicsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks {
 
   "gcd" should "return the greatest common divisor's absolute value" in {
     forAll { (x: Int, y: Int) =>
