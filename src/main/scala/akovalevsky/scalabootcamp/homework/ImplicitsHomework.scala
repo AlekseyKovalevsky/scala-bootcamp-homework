@@ -79,12 +79,11 @@ object ImplicitsHomework {
 
       @tailrec
       def put(key: K, value: V): Unit = {
-        (maxSizeScore - sizeScore, key.sizeScore + value.sizeScore) match {
+        (maxSizeScore - sizeScore(), key.sizeScore + value.sizeScore) match {
           case (0, _) => ()
-          case (sizeLeft, itemSize) if sizeLeft < itemSize => {
+          case (sizeLeft, itemSize) if sizeLeft < itemSize =>
             map = map.tail
             put(key, value)
-          }
           case _ => map.addOne(key, value)
 
         }
@@ -226,7 +225,7 @@ object ImplicitsHomework {
      */
     def createTwitCache(maxSizeScore: SizeScore): TwitCache = new TwitCache {
 
-      import akovalevsky.scalabootcamp.homework.ImplicitsHomework.SuperVipCollections4s.instances._;
+      import akovalevsky.scalabootcamp.homework.ImplicitsHomework.SuperVipCollections4s.instances._
 
       implicit def sizeScoreForFbiNote: GetSizeScore[FbiNote] = fbiNote =>
         fbiNote.month.sizeScore + fbiNote.favouriteChar.sizeScore + fbiNote.watchedPewDiePieTimes.sizeScore
@@ -244,21 +243,21 @@ object ImplicitsHomework {
 
   def main(args: Array[String]): Unit = {
     val twitCache = createTwitCache(400)
-    val twit1 = new Twit(
+    val twit1 = Twit(
       1001,
       100,
       Vector[String]("Hello", "World"),
       PackedMultiMap(("Hello", "World")),
       List(FbiNote("September", '$', 100000))
     )
-    val twit2 = new Twit(
+    val twit2 = Twit(
       1002,
       100,
       Vector[String]("Hello", "World"),
       PackedMultiMap(("Hello", "World")),
       List(FbiNote("September", '$', 100000))
     )
-    val twit3 = new Twit(
+    val twit3 = Twit(
       1003,
       100,
       Vector[String]("Hello", "World"),
