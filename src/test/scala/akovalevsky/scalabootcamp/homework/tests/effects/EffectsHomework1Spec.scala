@@ -1,6 +1,6 @@
-package akovalevsky.scalabootcamp.homework.tests.catseffect
+package akovalevsky.scalabootcamp.homework.tests.effects
 
-import akovalevsky.scalabootcamp.homework.catseffect.EffectsHomework1.IO
+import akovalevsky.scalabootcamp.homework.effects.EffectsHomework1.IO
 import cats.implicits.toFunctorOps
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
