@@ -166,7 +166,7 @@ object SharedStateHomework extends IOApp {
           _ <- T.sleep(checkOnExpirationsEvery)
           now <- Clock[F].realTime(expiresIn.unit)
           _ <- state.modify {
-            cache => (cache.filter { case (_, (expiresAt, _)) => expiresAt < now }, ())
+            cache => (cache.filter { case (_, (expiresAt, _)) => expiresAt > now }, ())
           }
           _ <- run()
         } yield ()
@@ -196,7 +196,7 @@ object SharedStateHomework extends IOApp {
       _ <- cache.get(2).flatMap(s => IO {
         println(s"second key $s")
       })
-      _ <- IO.sleep(12.seconds)
+      _ <- IO.sleep(6.seconds)
       _ <- cache.get(1).flatMap(s => IO {
         println(s"first key $s")
       })
