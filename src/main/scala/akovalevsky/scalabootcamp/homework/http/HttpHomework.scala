@@ -118,12 +118,14 @@ object GuessServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     (for {
       gameSessions <- Cache.of[IO, String, GuessGameSession](expiresIn = 1.hour, checkOnExpirationsEvery = 10.seconds)
-      _ <- BlazeServerBuilder[IO](ExecutionContext.global)
-        .bindHttp(port = 9001, host = "localhost")
-        .withHttpApp(httpApp(gameSessions))
-        .serve
-        .compile
-        .drain
+      _ <- gameSessions.use { gss =>
+        BlazeServerBuilder[IO](ExecutionContext.global)
+          .bindHttp(port = 9001, host = "localhost")
+          .withHttpApp(httpApp(gss))
+          .serve
+          .compile
+          .drain
+      }
 
     } yield ()) as ExitCode.Success
   }

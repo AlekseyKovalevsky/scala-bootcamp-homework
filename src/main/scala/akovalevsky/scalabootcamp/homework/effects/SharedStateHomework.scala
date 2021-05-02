@@ -2,8 +2,9 @@ package akovalevsky.scalabootcamp.homework.effects
 
 import cats.Monad
 import cats.effect.concurrent.{Deferred, MVar, Ref}
-import cats.effect.{Clock, Concurrent, ExitCode, IO, IOApp, Timer}
+import cats.effect.{Clock, Concurrent, ExitCode, IO, IOApp, Resource, Timer}
 import cats.syntax.all._
+import cats.effect.syntax.all._
 import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 
@@ -22,7 +23,7 @@ object IosCommon {
 object RefsExerciseTwo extends IOApp {
 
   def memoize[F[_], A](f: F[A])(implicit C: Concurrent[F]): F[F[A]] = {
-    val deferredF = Deferred[F, A](C)
+    val deferredF = Deferred[F, Either[Throwable, A]](C)
     val hasBeenExecutedRefF = Ref[F].of(false)
 
     for {
@@ -31,8 +32,9 @@ object RefsExerciseTwo extends IOApp {
     } yield C.suspend {
       for {
         hasBeenExecuted <- hasBeenExecutedRef.getAndSet(true)
-        _ <- if (!hasBeenExecuted) f.flatMap(deferred.complete) else C.pure(())
-        result <- deferred.get
+        _ <- if (!hasBeenExecuted) f.attempt.flatMap(deferred.complete) else C.pure(())
+        resultOrThrowable <- deferred.get
+        result <- C.fromEither(resultOrThrowable)
       } yield result
     }
   }
@@ -72,13 +74,13 @@ object RefsExerciseTwo extends IOApp {
      * java.lang.IllegalArgumentException: BOOM
      */
 
-    val failedResult: IO[Unit] = (for {
+    val failedResult: IO[Unit] = for {
       mem <- memoize(errorProgram)
-      x <- mem
+      x <- mem.attempt
       _ <- IO(println(x))
-      y <- mem
+      y <- mem.attempt
       _ <- IO(println(y))
-    } yield ()).handleErrorWith(e => IO(println(e)))
+    } yield ()
 
     successResult *>
       failedResult *>
@@ -120,8 +122,6 @@ object RaceMVarExercise extends IOApp {
       index <- race(task(0, 3.seconds), task(1, 5.seconds))
       _ <- logger.info(s"index should be 0, $index ")
     } yield ExitCode.Success
-
-
   }
 }
 
@@ -144,22 +144,21 @@ object SharedStateHomework extends IOApp {
                                               state: Ref[F, Map[K, (Long, V)]],
                                               expiresIn: FiniteDuration
                                             ) extends Cache[F, K, V] {
-
     def get(key: K): F[Option[V]] = for {
       cache <- state.get
     } yield cache.get(key).map { case (_, value) => value }
 
     def put(key: K, value: V): F[Unit] = for {
       now <- Clock[F].realTime(expiresIn.unit)
-      _ <- state.modify(cache => (cache + (key -> (now + expiresIn.length, value)), ()))
+      _ <- state.update(cache => cache + (key -> (now + expiresIn.length, value)))
     } yield ()
   }
 
   object Cache {
-    def of[F[_] : Clock : Monad, K, V](
-                                        expiresIn: FiniteDuration,
-                                        checkOnExpirationsEvery: FiniteDuration
-                                      )(implicit T: Timer[F], C: Concurrent[F]): F[Cache[F, K, V]] = {
+    def of[F[_], K, V](
+                        expiresIn: FiniteDuration,
+                        checkOnExpirationsEvery: FiniteDuration
+                      )(implicit T: Timer[F], C: Concurrent[F]): F[Resource[F, Cache[F, K, V]]] = {
 
       def cacheExpirationService(state: Ref[F, Map[K, (Long, V)]]): F[Unit] = {
         def run(): F[Unit] = for {
@@ -176,40 +175,42 @@ object SharedStateHomework extends IOApp {
 
       for {
         state <- Ref.of[F, Map[K, (Long, V)]](Map[K, (Long, V)]())
-        refCache <- new RefCache[F, K, V](state, expiresIn).pure[F]
-        _ <- C.start(cacheExpirationService(state))
-      } yield refCache
-
+        expirationService <- cacheExpirationService(state).start
+      } yield Resource.make(C.delay(new RefCache[F, K, V](state, expiresIn)))(_ => expirationService.cancel)
     }
-
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
 
     for {
       cache <- Cache.of[IO, Int, String](10.seconds, 4.seconds)
-      _ <- cache.put(1, "Hello")
-      _ <- cache.put(2, "World")
-      _ <- cache.get(1).flatMap(s => IO {
-        println(s"first key $s")
-      })
-      _ <- cache.get(2).flatMap(s => IO {
-        println(s"second key $s")
-      })
-      _ <- IO.sleep(6.seconds)
-      _ <- cache.get(1).flatMap(s => IO {
-        println(s"first key $s")
-      })
-      _ <- cache.get(2).flatMap(s => IO {
-        println(s"second key $s")
-      })
-      _ <- IO.sleep(12.seconds)
-      _ <- cache.get(1).flatMap(s => IO {
-        println(s"first key $s")
-      })
-      _ <- cache.get(2).flatMap(s => IO {
-        println(s"second key $s")
-      })
+      _ <- cache.use { cache =>
+        for {
+          _ <- cache.put(1, "Hello")
+          _ <- cache.put(2, "World")
+          _ <- cache.get(1).flatMap(s => IO {
+            println(s"first key $s")
+          })
+          _ <- cache.get(2).flatMap(s => IO {
+            println(s"second key $s")
+          })
+          _ <- IO.sleep(6.seconds)
+          _ <- cache.get(1).flatMap(s => IO {
+            println(s"first key $s")
+          })
+          _ <- cache.get(2).flatMap(s => IO {
+            println(s"second key $s")
+          })
+          _ <- IO.sleep(12.seconds)
+          _ <- cache.get(1).flatMap(s => IO {
+            println(s"first key $s")
+          })
+          _ <- cache.get(2).flatMap(s => IO {
+            println(s"second key $s")
+          })
+        } yield ()
+      }
+
     } yield ExitCode.Success
   }
 }
